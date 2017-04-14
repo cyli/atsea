@@ -1,47 +1,32 @@
-version: "3.1"
+version: "3.2"
 
 services:
   database:
-    build:
-       context: ./database
-    image: atsea_db
+    image: dockersecurity/dc17-atsea:atsea_db
     environment:
       POSTGRES_USER: gordonuser
       POSTGRES_DB_PASSWORD_FILE: /run/secrets/postgres_password
       POSTGRES_DB: atsea
-    ports:
-      - "5432:5432"
     networks:
-      - back-tier
+     - back-tier
     secrets:
       - postgres_password
-    #restart: always
 
   appserver:
-    build:
-       context: .
-       dockerfile: app/Dockerfile
-    image: atsea_app
-    # mount point for application in tomcat
-    links:
-      - database:atsea_db
-    # open ports for tomcat and remote debugging
+    image: dockersecurity/dc17-atsea:atsea_app
     ports:
       - "8080:8080"
     networks:
       - front-tier
       - back-tier
-    volumes:
-      - ./app/static:/static
+      - payment
     secrets:
       - postgres_password
-    #restart: always
-    volumes:
-     - ./app/static:/static
 
   payment_gateway:
-    build:
-      context: payment_gateway
+    image: dockersecurity/dc17-atsea:atsea_payment
+    secrets:
+      - payment_token
     networks:
       - payment
 
@@ -49,7 +34,6 @@ networks:
   front-tier:
   back-tier:
   payment:
-    driver: overlay
 
 secrets:
   postgres_password:
